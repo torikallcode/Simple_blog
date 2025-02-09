@@ -60,3 +60,31 @@ func CreateArticle(w http.ResponseWriter, r *http.Request) {
 	articles = append(articles, article)
 	json.NewEncoder(w).Encode(article)
 }
+
+func UpdateArticle(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	id, err := strconv.Atoi(params["id"])
+	if err != nil {
+		http.Error(w, "invalid article", http.StatusBadRequest)
+		return
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	for index, item := range articles {
+		if item.ID == id {
+			var UpdateArticle models.Article
+			if err := json.NewDecoder(r.Body).Decode(&UpdateArticle); err != nil {
+				http.Error(w, "invalid article", http.StatusBadRequest)
+				return
+			}
+			UpdateArticle.ID = id
+			articles[index] = UpdateArticle
+			json.NewEncoder(w).Encode(UpdateArticle)
+			return
+		}
+	}
+	http.Error(w, "article not found", http.StatusNotFound)
+}
