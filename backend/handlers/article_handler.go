@@ -44,3 +44,19 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Error(w, "article not found", http.StatusNotFound)
 }
+
+func CreateArticle(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var article models.Article
+	if err := json.NewDecoder(r.Body).Decode(&article); err != nil {
+		http.Error(w, "invalid input", http.StatusBadRequest)
+		return
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	article.ID = nextID
+	articles = append(articles, article)
+	json.NewEncoder(w).Encode(article)
+}
