@@ -4,7 +4,10 @@ import (
 	"backend/models"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"sync"
+
+	"github.com/gorilla/mux"
 )
 
 var (
@@ -20,4 +23,24 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
 	json.NewEncoder(w).Encode(articles)
+}
+
+func GetArticle(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	id, err := strconv.Atoi(params["id"])
+
+	mu.Lock()
+	defer mu.Unlock()
+	if err != nil {
+		http.Error(w, "invalid article", http.StatusBadRequest)
+		return
+	}
+	for _, item := range articles {
+		if item.ID == id {
+			json.NewEncoder(w).Encode(item)
+			return
+		}
+	}
+	http.Error(w, "article not found", http.StatusNotFound)
 }
