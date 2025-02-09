@@ -88,3 +88,23 @@ func UpdateArticle(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Error(w, "article not found", http.StatusNotFound)
 }
+
+func DeleteArticle(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	id, err := strconv.Atoi(params["id"])
+	if err != nil {
+		http.Error(w, "invalid article", http.StatusBadRequest)
+		return
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	for index, item := range articles {
+		if item.ID == id {
+			articles = append(articles[:index], articles[index+1:]...)
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+	}
+	http.Error(w, "article not found", http.StatusNotFound)
+}
