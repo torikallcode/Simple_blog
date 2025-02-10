@@ -14,8 +14,7 @@ var (
 	articles = []models.Article{
 		{ID: 1, Title: "New World", Content: "New World is blablabla"},
 	}
-	mu     sync.Mutex
-	nextID = 2
+	mu sync.Mutex
 )
 
 func GetArticles(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +55,7 @@ func CreateArticle(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	article.ID = nextID
+	article.ID = len(articles) + 1
 	articles = append(articles, article)
 	json.NewEncoder(w).Encode(article)
 }
