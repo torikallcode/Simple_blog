@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backend/database"
 	"backend/models"
 	"encoding/json"
 	"net/http"
@@ -11,9 +12,6 @@ import (
 )
 
 var (
-	articles = []models.Article{
-		{ID: 1, Title: "New World", Content: "New World is blablabla"},
-	}
 	mu sync.Mutex
 )
 
@@ -21,6 +19,27 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	mu.Lock()
 	defer mu.Unlock()
+
+	var articles []models.Article
+
+	query := "SELECT id, title, content FROM articles"
+	rows, err := database.DB.Query(query)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var article models.Article
+		if err := rows.Scan(&article.ID, &article.Title, article.Content); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		articles = append(articles, article)
+	}
+
 	json.NewEncoder(w).Encode(articles)
 }
 
