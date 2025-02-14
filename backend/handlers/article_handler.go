@@ -3,6 +3,7 @@ package handlers
 import (
 	"backend/database"
 	"backend/models"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -22,7 +23,7 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 
 	var articles []models.Article
 
-	query := "SELECT id, title, content FROM articles"
+	query := "SELECT id, title, content FROM article"
 	rows, err := database.DB.Query(query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -50,17 +51,24 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 
 	mu.Lock()
 	defer mu.Unlock()
+
 	if err != nil {
 		http.Error(w, "invalid article", http.StatusBadRequest)
 		return
 	}
-	for _, item := range articles {
-		if item.ID == id {
-			json.NewEncoder(w).Encode(item)
-			return
-		}
+
+	var article models.Article
+
+	query := "SELECT id , title, content FROM article WHERE id =?"
+	err = database.DB.QueryRow(query, id).Scan(&article.ID, &article.Title, &article.Content)
+	if err == sql.ErrNoRows {
+		http.Error(w, "rown not founf", http.StatusNotFound)
+		return
+	} else if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	http.Error(w, "article not found", http.StatusNotFound)
+	json.NewEncoder(w).Encode(article)
 }
 
 func CreateArticle(w http.ResponseWriter, r *http.Request) {
