@@ -82,8 +82,21 @@ func CreateArticle(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	article.ID = len(articles) + 1
-	articles = append(articles, article)
+	query := "INSERT INTO arcticle (title, content) VALUE (?,?)"
+
+	result, err := database.DB.Exec(query, article.Title, article.Content)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	article.ID = int(id)
 	json.NewEncoder(w).Encode(article)
 }
 
