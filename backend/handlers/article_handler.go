@@ -112,20 +112,16 @@ func UpdateArticle(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	for index, item := range articles {
-		if item.ID == id {
-			var UpdateArticle models.Article
-			if err := json.NewDecoder(r.Body).Decode(&UpdateArticle); err != nil {
-				http.Error(w, "invalid article", http.StatusBadRequest)
-				return
-			}
-			UpdateArticle.ID = id
-			articles[index] = UpdateArticle
-			json.NewEncoder(w).Encode(UpdateArticle)
-			return
-		}
+	var UpdateArticle models.Article
+	query := "UPDATE article SET title = ?, content = ? WHERE id = ?"
+	_, err = database.DB.Exec(query, UpdateArticle.Title, UpdateArticle.Content, id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	http.Error(w, "article not found", http.StatusNotFound)
+
+	UpdateArticle.ID = id
+	json.NewEncoder(w).Encode(UpdateArticle)
 }
 
 func DeleteArticle(w http.ResponseWriter, r *http.Request) {
