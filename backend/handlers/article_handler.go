@@ -134,12 +134,19 @@ func DeleteArticle(w http.ResponseWriter, r *http.Request) {
 	}
 	mu.Lock()
 	defer mu.Unlock()
-	for index, item := range articles {
-		if item.ID == id {
-			articles = append(articles[:index], articles[index+1:]...)
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
+
+	query := "DELET FROM article WHERE id = ?"
+	result, err := database.DB.Exec(query, id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	http.Error(w, "article not found", http.StatusNotFound)
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		http.Error(w, "article not found", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
