@@ -34,7 +34,7 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var article models.Article
-		if err := rows.Scan(&article.ID, &article.Title, article.Content); err != nil {
+		if err := rows.Scan(&article.ID, &article.Title, &article.Content); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -82,7 +82,7 @@ func CreateArticle(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	query := "INSERT INTO arcticle (title, content) VALUE (?,?)"
+	query := "INSERT INTO article (title, content) VALUE (?,?)"
 
 	result, err := database.DB.Exec(query, article.Title, article.Content)
 	if err != nil {
@@ -113,8 +113,13 @@ func UpdateArticle(w http.ResponseWriter, r *http.Request) {
 	defer mu.Unlock()
 
 	var UpdateArticle models.Article
+	if err := json.NewDecoder(r.Body).Decode(&UpdateArticle); err != nil {
+		http.Error(w, "invalid article", http.StatusBadRequest)
+		return
+	}
+
 	query := "UPDATE article SET title = ?, content = ? WHERE id = ?"
-	_, err = database.DB.Exec(query, UpdateArticle.Title, UpdateArticle.Content, id)
+	_, err = database.DB.Exec(query, &UpdateArticle.Title, &UpdateArticle.Content, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -135,7 +140,7 @@ func DeleteArticle(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	query := "DELET FROM article WHERE id = ?"
+	query := "DELETE FROM article WHERE id = ?"
 	result, err := database.DB.Exec(query, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
