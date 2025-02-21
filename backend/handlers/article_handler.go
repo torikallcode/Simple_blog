@@ -44,7 +44,6 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 	// Eksekusi query SELECT untuk mengambil data spesifik
 	// Memindahkan data ke variabel list
 	// Mengirim data list sebagai JSON response
-
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
 	id, err := strconv.Atoi(params["id"])
@@ -65,6 +64,7 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(article)
+
 }
 
 func CreateArticle(w http.ResponseWriter, r *http.Request) {
