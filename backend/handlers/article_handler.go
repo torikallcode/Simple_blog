@@ -74,6 +74,28 @@ func CreateArticle(w http.ResponseWriter, r *http.Request) {
 	// Eksekusi query INSERT ke database
 	// Ambil ID dari baris yang baru dimasukkan
 	// Kirim data list yang baru dibuat sebagai response
+	w.Header().Set("Content-Type", "application/json")
+	var article models.Article
+	if err := json.NewDecoder(r.Body).Decode(&article); err != nil {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	query := "INSERT INTO article (title, content) VALUE (?,?)"
+	result, err := database.DB.Exec(query, &article.Title, &article.Content)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	article.ID = int(id)
+	json.NewEncoder(w).Encode(article)
 
 }
 
