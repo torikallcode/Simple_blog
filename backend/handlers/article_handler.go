@@ -107,6 +107,28 @@ func UpdateArticle(w http.ResponseWriter, r *http.Request) {
 	// Validasi input
 	// Eksekusi query UPDATE ke database
 	// Kirim data list yang diupdate sebagai response
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	id, err := strconv.Atoi(params["id"])
+	if err != nil {
+		http.Error(w, "invalid request", http.StatusInternalServerError)
+		return
+	}
+
+	var article models.Article
+	if err := json.NewDecoder(r.Body).Decode(&article); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	query := "UPDATE article SET title = ?, content = ? WHERE id = ?"
+	_, err = database.DB.Exec(query, &article.Title, &article.Content, id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(article)
 
 }
 
