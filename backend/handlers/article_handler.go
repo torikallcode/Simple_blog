@@ -139,5 +139,26 @@ func DeleteArticle(w http.ResponseWriter, r *http.Request) {
 	// Eksekusi query DELETE ke database
 	// Periksa jumlah baris yang terpengaruh
 	// Kirim response sesuai hasil operasi
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	id, err := strconv.Atoi(params["id"])
+	if err != nil {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
 
+	query := "DELETE FROM article WHERE id = ?"
+	result, err := database.DB.Exec(query, id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		http.Error(w, "rows not found", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
